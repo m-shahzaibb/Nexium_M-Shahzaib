@@ -22,6 +22,13 @@ const dictionary: Record<string, string> = {
 export function translateToUrdu(text: string): string {
   return text
     .split(" ")
-    .map((word) => dictionary[word.toLowerCase()] || word)
+    .map((word) => {
+      // Remove punctuation for lookup but preserve it
+      const cleanWord = word.toLowerCase().replace(/[.,!?;:]/g, "");
+      const punctuation = word.match(/[.,!?;:]/g)?.join("") || "";
+      
+      const translation = dictionary[cleanWord] || word;
+      return translation + punctuation;
+    })
     .join(" ");
 }

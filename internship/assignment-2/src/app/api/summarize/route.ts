@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       summary,
+      fullText,
       translated,
     });
   } catch (error) {
