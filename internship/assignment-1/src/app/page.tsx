@@ -47,7 +47,7 @@ export default function Home() {
           placeholder="Enter a topic (e.g. success, courage)"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          className="rounded-2xl bg-white/5 backdrop-blur-2xl text-white font-semibold placeholder-white/60 border border-white/40 px-4 py-3 shadow-[inset_1px_1px_3px_rgba(255,255,255,0.2),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]"
+          className="rounded-2xl bg-white/5 backdrop-blur-2xl text-black font-semibold placeholder-black/60 border border-white/40 px-4 py-3 shadow-[inset_1px_1px_3px_rgba(255,255,255,0.2),inset_-1px_-1px_2px_rgba(0,0,0,0.2)]"
         />
 
         <Button type="submit" className="w-full">
