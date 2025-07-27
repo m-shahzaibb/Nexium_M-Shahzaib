@@ -41,3 +41,43 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: 'Invalid recipe ID' },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    const deletedRecipe = await Recipe.findByIdAndDelete(id);
+
+    if (!deletedRecipe) {
+      return NextResponse.json(
+        { error: 'Recipe not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Recipe deleted successfully',
+      deletedRecipe: deletedRecipe
+    });
+
+  } catch (error) {
+    console.error("Error deleting recipe:", error);
+    return NextResponse.json(
+      { error: 'Failed to delete recipe' },
+      { status: 500 }
+    );
+  }
+}
