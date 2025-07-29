@@ -46,9 +46,16 @@ function extractRecipeName(content: string, fallbackPrompt: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, userEmail } = await request.json();
+    const { prompt, userEmail, recipeName } = await request.json();
     
-    // Use environment variable instead of hardcoded localhost
+    // Validate inputs
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Valid prompt is required' },
+        { status: 400 }
+      );
+    }
+    
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/f6331d8d-3a04-4bee-9146-7d88abdfd548";
     
     console.log("Using n8n webhook URL:", n8nWebhookUrl);
@@ -56,28 +63,38 @@ export async function POST(request: NextRequest) {
     const res = await fetch(n8nWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt: prompt.trim() }),
     });
 
     if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.error(`N8N webhook error: ${res.status} - ${errorText}`);
       throw new Error(`HTTP error! status: ${res.status}`);
     }
 
     const data = await res.json();
+    
+    if (!data || !data.recipe) {
+      throw new Error("Invalid response format from recipe generator");
+    }
+    
     const recipeContent = data.recipe;
 
-    // Extract recipe name from the generated content
-    const recipeName = extractRecipeName(recipeContent, prompt);
-    console.log("Extracted recipe name:", recipeName);
+    // Use the provided recipe name, or extract from content as fallback
+    const finalRecipeName = recipeName && recipeName.trim() 
+      ? recipeName.trim() 
+      : extractRecipeName(recipeContent, prompt);
+    
+    console.log("Using recipe name:", finalRecipeName);
 
     // Save to MongoDB
     try {
       await connectDB();
       
       const recipe = new Recipe({
-        recipeName: recipeName,
-        prompt: prompt,
-        recipeContent: recipeContent, // Fixed field name
+        recipeName: finalRecipeName,
+        prompt: prompt.trim(),
+        recipeContent: recipeContent,
         userEmail: userEmail || 'anonymous@example.com',
         source: 'n8n-gemini',
         success: true,
@@ -85,12 +102,12 @@ export async function POST(request: NextRequest) {
       });
 
       await recipe.save();
-      console.log('✅ Recipe saved to database with name:', recipeName);
+      console.log('✅ Recipe saved to database with name:', finalRecipeName);
 
       return NextResponse.json({ 
         recipe: recipeContent,
         saved: true,
-        recipeName: recipeName
+        recipeName: finalRecipeName
       });
     } catch (dbError) {
       console.error('❌ Failed to save recipe:', dbError);
@@ -105,7 +122,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
-      { error: "Failed to generate recipe" },
+      { 
+        error: "Failed to generate recipe",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
@@ -139,7 +159,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: false,
         recipes: [],
-        error: 'Database connection failed'
+        error: 'Database connection failed',
+        details: dbError instanceof Error ? dbError.message : 'Unknown error'
       }, { status: 500 });
     }
 
@@ -148,7 +169,7 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .limit(20)
       .select('_id recipeName prompt createdAt source success')
-      .lean() as LeanRecipe[]; // Fix: Type assertion for lean documents
+      .lean() as unknown as LeanRecipe[]; // Fix: Double type assertion
 
     console.log(`✅ Found ${recipes.length} recipes for user: ${userEmail}`);
     

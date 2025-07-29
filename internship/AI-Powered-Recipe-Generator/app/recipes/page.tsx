@@ -56,8 +56,9 @@ export default function RecipeGeneratorPage() {
     setLoadingRecipes(true);
     try {
       console.log("🔍 Fetching recipes for:", userEmail);
+      // Updated API endpoint to match your working AI route
       const res = await fetch(
-        `/api/recipes?userEmail=${encodeURIComponent(userEmail)}`
+        `/api/ai?userEmail=${encodeURIComponent(userEmail)}`
       );
 
       console.log("📡 Response status:", res.status);
@@ -94,14 +95,23 @@ export default function RecipeGeneratorPage() {
     setLoading(true);
     setSelectedRecipe(null);
     try {
+      // Enhanced prompt to ensure the recipe name matches user input
+      const enhancedPrompt = `Create a recipe for: ${prompt.trim()}
+
+Please start your response with the recipe title in this exact format:
+# ${prompt.trim()}
+
+Then provide the complete recipe with ingredients and instructions.`;
+
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt,
+          prompt: enhancedPrompt,
           userEmail: user?.email || "anonymous@example.com",
+          recipeName: prompt.trim(), // Send the user's input as the recipe name
         }),
       });
 
@@ -229,6 +239,7 @@ export default function RecipeGeneratorPage() {
 
   if (userLoading) {
     return (
+      // Loading screen maintains min-h-screen to ensure it's always full screen
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <Sparkles />
         <div className="text-center">
@@ -242,241 +253,243 @@ export default function RecipeGeneratorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    // Outer container: Relative to allow the fixed background and sparkles to overlay.
+    // No min-h-screen here, as content will dictate height, allowing scrolling.
+    <div className="relative">
+      {/* Fixed background gradient covering the entire viewport */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 -z-10" />
+
+      {/* Sparkles component is fixed over the background */}
       <Sparkles />
 
-      {/* Main Content Container */}
+      {/* Main content container */}
       <div className="relative z-10 flex flex-col items-center px-4 py-16 sm:py-24">
-        {/* Recipe Generator Main Card */}
-        <div className="bg-white/10 backdrop-blur-xl shadow-2xl rounded-3xl px-6 py-10 sm:px-10 sm:py-12 max-w-5xl w-full border border-white/20 relative overflow-hidden mb-16">
-          {/* Glowing border effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-blue-400/20 rounded-3xl blur-xl"></div>
+        {/* Hero section with main card */}
+        {/* Added w-full max-w-2xl to this flex container to match the card's width constraint */}
+        <div className="flex flex-col items-center justify-center mb-16 w-full max-w-2xl">
+          <div className="bg-white/10 backdrop-blur-xl shadow-2xl rounded-3xl px-6 py-10 sm:px-10 sm:py-12 w-full border border-white/20 relative overflow-hidden text-center">
+            {/* Glowing border effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-blue-400/20 rounded-3xl blur-xl"></div>
 
-          <div className="relative z-10">
-            <h1 className="text-4xl sm:text-5xl font-bold text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 drop-shadow-lg">
-              ✨ AI Recipe Generator ✨
-            </h1>
+            <div className="relative z-10">
+              <h1 className="text-4xl sm:text-5xl font-bold text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 drop-shadow-lg">
+                ✨ AI Recipe Generator ✨
+              </h1>
 
-            <p className="text-center text-gray-200 mb-8 text-lg sm:text-xl">
-              Welcome,{" "}
-              <span className="font-semibold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                {user?.email || "Guest"}
-              </span>
-            </p>
+              <p className="text-center text-gray-200 mb-8 text-lg sm:text-xl">
+                Welcome,{" "}
+                <span className="font-semibold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  {user?.email || "Guest"}
+                </span>
+              </p>
 
-            {/* Input Section */}
-            <div className="relative mb-8">
-              <input
-                type="text"
-                placeholder="✨ What culinary magic shall we create today?"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="w-full p-4 sm:p-6 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 text-lg"
-                onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl blur-lg -z-10"></div>
-            </div>
-
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !prompt.trim()}
-              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mb-8 relative overflow-hidden group shadow-lg"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/30 to-pink-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <span className="relative z-10">
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-white mr-3"></div>
-                    Crafting your recipe...
-                  </span>
-                ) : (
-                  "🪄 Generate Amazing Recipe"
-                )}
-              </span>
-            </button>
-
-            {/* Previous Recipes Section */}
-            {previousRecipes.length > 0 && (
-              <div className="mb-8 bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/20 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-2xl"></div>
-                <div className="relative z-10">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl sm:text-2xl font-bold text-white flex items-center">
-                      📚 Your Recipe Collection ({previousRecipes.length})
-                    </h3>
-                    <button
-                      onClick={() =>
-                        setShowPreviousRecipes(!showPreviousRecipes)
-                      }
-                      className="text-sm text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 px-4 py-2 rounded-lg font-medium transition-all duration-200"
-                    >
-                      {showPreviousRecipes ? "Hide" : "Show"}
-                    </button>
-                  </div>
-
-                  {showPreviousRecipes && (
-                    <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
-                      {loadingRecipes ? (
-                        <p className="text-white text-center py-8 font-medium text-lg">
-                          Loading your recipes...
-                        </p>
-                      ) : (
-                        previousRecipes.map((recipe) => (
-                          <div
-                            key={recipe._id}
-                            className="flex justify-between items-center p-5 sm:p-6 bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-600/50 hover:border-purple-400/70 hover:bg-slate-700/80 transition-all duration-300 group shadow-lg"
-                          >
-                            <div className="flex-1">
-                              <h4 className="font-bold text-white text-lg group-hover:text-purple-200 transition-colors duration-200">
-                                {recipe.recipeName}
-                              </h4>
-                              <p className="text-base text-gray-300 group-hover:text-gray-100 mt-2 font-medium">
-                                {formatDate(recipe.createdAt)}{" "}
-                                {recipe.source &&
-                                  recipe.source !== "n8n-gemini" && (
-                                    <span className="ml-2 px-3 py-1 bg-yellow-500/40 text-yellow-100 rounded-full text-sm border border-yellow-400/60 font-semibold">
-                                      {recipe.source}
-                                    </span>
-                                  )}
-                              </p>
-                            </div>
-                            <div className="flex space-x-3">
-                              <button
-                                onClick={() => handleViewRecipe(recipe._id)}
-                                className="px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:from-purple-500 hover:to-blue-500 hover:shadow-lg hover:shadow-purple-400/40 transition-all duration-200 font-bold"
-                              >
-                                View
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleDeleteRecipe(
-                                    recipe._id,
-                                    recipe.recipeName
-                                  )
-                                }
-                                className="px-5 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm rounded-lg hover:from-red-500 hover:to-pink-500 hover:shadow-lg hover:shadow-red-400/40 transition-all duration-200 font-bold"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
+              {/* Input Section */}
+              <div className="relative mb-8">
+                <input
+                  type="text"
+                  placeholder="✨ What culinary magic shall we create today?"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  className="w-full p-4 sm:p-6 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 text-lg"
+                  onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl blur-lg -z-10"></div>
               </div>
-            )}
 
-            {/* Recipe Display Section */}
-            {recipe && (
-              <div className="bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/20 relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 via-yellow-600/10 to-red-600/10 rounded-2xl"></div>
-                <div className="relative z-10">
-                  {selectedRecipe ? (
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
-                      <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                        🍽️ Saved Recipe
-                      </h3>
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() =>
-                            handleDeleteRecipe(
-                              selectedRecipe._id,
-                              selectedRecipe.recipeName
-                            )
-                          }
-                          className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg font-medium"
-                        >
-                          Delete
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedRecipe(null);
-                            setRecipe("");
-                            setPrompt("");
-                          }}
-                          className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 font-medium"
-                        >
-                          ✕ Close
-                        </button>
-                      </div>
-                    </div>
+              <button
+                onClick={handleGenerate}
+                disabled={loading || !prompt.trim()}
+                className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mb-8 relative overflow-hidden group shadow-lg"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/30 to-pink-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative z-10">
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-white mr-3"></div>
+                      Crafting your recipe...
+                    </span>
                   ) : (
-                    <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6">
-                      🍽️ Fresh Recipe
-                    </h3>
+                    "🪄 Generate Amazing Recipe"
                   )}
-
-                  <div className="prose prose-invert max-w-none max-h-96 overflow-y-auto custom-scrollbar">
-                    <ReactMarkdown
-                      components={{
-                        h1: ({ children }) => (
-                          <h1 className="text-3xl font-bold text-white mt-6 mb-4 border-b-2 border-orange-400/50 pb-2">
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children }) => (
-                          <h2 className="text-2xl font-bold text-purple-300 mt-6 mb-3 flex items-center">
-                            <span className="mr-2">🔸</span>
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children }) => (
-                          <h3 className="text-xl font-bold text-blue-300 mt-5 mb-3 flex items-center">
-                            <span className="mr-2">📋</span>
-                            {children}
-                          </h3>
-                        ),
-                        h4: ({ children }) => (
-                          <h4 className="text-lg font-bold text-yellow-300 mt-4 mb-2 border-l-4 border-orange-400 pl-3">
-                            {children}
-                          </h4>
-                        ),
-                        strong: ({ children }) => (
-                          <strong className="font-bold text-orange-300 bg-orange-400/20 px-1 rounded">
-                            {children}
-                          </strong>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-none mb-4 space-y-2">
-                            {children}
-                          </ul>
-                        ),
-                        li: ({ children }) => (
-                          <li className="mb-2 flex items-start text-gray-200">
-                            <span className="text-orange-400 mr-3 mt-1 text-lg">
-                              •
-                            </span>
-                            <span>{children}</span>
-                          </li>
-                        ),
-                        p: ({ children }) => (
-                          <p className="mb-4 leading-relaxed text-gray-200 text-base">
-                            {children}
-                          </p>
-                        ),
-                        hr: () => (
-                          <hr className="my-8 border-t-2 border-orange-400/30" />
-                        ),
-                        blockquote: ({ children }) => (
-                          <blockquote className="border-l-4 border-purple-400 pl-4 italic text-purple-200 my-6 bg-purple-400/10 p-4 rounded-r-lg">
-                            {children}
-                          </blockquote>
-                        ),
-                      }}
-                    >
-                      {recipe}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              </div>
-            )}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Previous Recipes Section - Full width */}
+        {previousRecipes.length > 0 && (
+          <div className="mb-8 bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/20 relative w-full max-w-6xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-2xl"></div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-white flex items-center">
+                  📚 Your Recipe Collection ({previousRecipes.length})
+                </h3>
+                <button
+                  onClick={() => setShowPreviousRecipes(!showPreviousRecipes)}
+                  className="text-sm text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 px-4 py-2 rounded-lg font-medium transition-all duration-200"
+                >
+                  {showPreviousRecipes ? "Hide" : "Show"}
+                </button>
+              </div>
+
+              {showPreviousRecipes && (
+                <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
+                  {loadingRecipes ? (
+                    <p className="text-white text-center py-8 font-medium text-lg">
+                      Loading your recipes...
+                    </p>
+                  ) : (
+                    previousRecipes.map((recipe) => (
+                      <div
+                        key={recipe._id}
+                        className="flex justify-between items-center p-5 sm:p-6 bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-600/50 hover:border-purple-400/70 hover:bg-slate-700/80 transition-all duration-300 group shadow-lg"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-bold text-white text-lg group-hover:text-purple-200 transition-colors duration-200">
+                            {recipe.recipeName}
+                          </h4>
+                          <p className="text-base text-gray-300 group-hover:text-gray-100 mt-2 font-medium">
+                            {formatDate(recipe.createdAt)}{" "}
+                            {recipe.source &&
+                              recipe.source !== "n8n-gemini" && (
+                                <span className="ml-2 px-3 py-1 bg-yellow-500/40 text-yellow-100 rounded-full text-sm border border-yellow-400/60 font-semibold">
+                                  {recipe.source}
+                                </span>
+                              )}
+                          </p>
+                        </div>
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => handleViewRecipe(recipe._id)}
+                            className="px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:from-purple-500 hover:to-blue-500 hover:shadow-lg hover:shadow-purple-400/40 transition-all duration-200 font-bold"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteRecipe(recipe._id, recipe.recipeName)
+                            }
+                            className="px-5 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm rounded-lg hover:from-red-500 hover:to-pink-500 hover:shadow-lg hover:shadow-red-400/40 transition-all duration-200 font-bold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Recipe Display Section - Full width */}
+        {recipe && (
+          <div className="bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/20 relative w-full max-w-6xl mb-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 via-yellow-600/10 to-red-600/10 rounded-2xl"></div>
+            <div className="relative z-10">
+              {selectedRecipe ? (
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                  <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                    🍽️ Saved Recipe
+                  </h3>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() =>
+                        handleDeleteRecipe(
+                          selectedRecipe._id,
+                          selectedRecipe.recipeName
+                        )
+                      }
+                      className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg font-medium"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedRecipe(null);
+                        setRecipe("");
+                        setPrompt("");
+                      }}
+                      className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 font-medium"
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6">
+                  🍽️ Fresh Recipe
+                </h3>
+              )}
+
+              <div className="prose prose-invert max-w-none max-h-96 overflow-y-auto custom-scrollbar">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => (
+                      <h1 className="text-3xl font-bold text-white mt-6 mb-4 border-b-2 border-orange-400/50 pb-2">
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-2xl font-bold text-purple-300 mt-6 mb-3 flex items-center">
+                        <span className="mr-2">🔸</span>
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-xl font-bold text-blue-300 mt-5 mb-3 flex items-center">
+                        <span className="mr-2">📋</span>
+                        {children}
+                      </h3>
+                    ),
+                    h4: ({ children }) => (
+                      <h4 className="text-lg font-bold text-yellow-300 mt-4 mb-2 border-l-4 border-orange-400 pl-3">
+                        {children}
+                      </h4>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-bold text-orange-300 bg-orange-400/20 px-1 rounded">
+                        {children}
+                      </strong>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-none mb-4 space-y-2">{children}</ul>
+                    ),
+                    li: ({ children }) => (
+                      <li className="mb-2 flex items-start text-gray-200">
+                        <span className="text-orange-400 mr-3 mt-1 text-lg">
+                          •
+                        </span>
+                        <span>{children}</span>
+                      </li>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-4 leading-relaxed text-gray-200 text-base">
+                        {children}
+                      </p>
+                    ),
+                    hr: () => (
+                      <hr className="my-8 border-t-2 border-orange-400/30" />
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-purple-400 pl-4 italic text-purple-200 my-6 bg-purple-400/10 p-4 rounded-r-lg">
+                        {children}
+                      </blockquote>
+                    ),
+                  }}
+                >
+                  {recipe}
+                </ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Informational Sections */}
-        <section className="relative z-10 max-w-5xl w-full px-4 text-center text-gray-100 space-y-16">
+        <section className="relative z-10 max-w-6xl w-full px-4 text-center text-gray-100 space-y-16">
           {/* How It Works Section */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 sm:p-12 border border-white/20 shadow-xl">
             <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-8">
@@ -687,7 +700,7 @@ export default function RecipeGeneratorPage() {
         </section>
 
         {/* Footer Navigation */}
-        <div className="w-full max-w-5xl flex flex-col sm:flex-row sm:justify-between items-center mt-16 mb-12 space-y-4 sm:space-y-0 px-4">
+        <div className="w-full max-w-6xl flex flex-col sm:flex-row sm:justify-between items-center mt-16 mb-12 space-y-4 sm:space-y-0 px-4">
           <Link
             href="/"
             className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 px-6 py-3 rounded-lg hover:underline font-medium transition-all duration-200 flex items-center"
