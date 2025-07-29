@@ -19,8 +19,8 @@ export default function HomePage() {
       setLoading(false);
     };
     getUser();
-  }, [router]); // Keeping [router] as per original for Next.js router dependency
-
+  }, [router]); 
+  
   // Sparkle component for animation
   const Sparkles = () => {
     const sparkles = Array.from({ length: 50 }, (_, i) => (
@@ -85,15 +85,8 @@ export default function HomePage() {
 
       {/* Sparkles component is fixed over the background */}
       <Sparkles />
+      {/* Main content container */}
 
-      {/* Main content wrapper:
-          - z-10 to be above the fixed background/sparkles
-          - flex flex-col items-center: Centers content horizontally
-          - px-4 py-16 sm:py-24: Adds padding around the content
-          - No min-h-screen here unless you specifically want the content to always
-            fill at least the viewport height, even if sparse. If content overflows,
-            this div will naturally expand and the browser will add scrollbars.
-      */}
       <div className="relative z-10 flex flex-col items-center px-4 py-16 sm:py-24">
         {/* Hero section with main card */}
         {/* Added w-full max-w-2xl to this flex container to match the card's width constraint */}
@@ -130,7 +123,7 @@ export default function HomePage() {
                       href="/recipes"
                       className="block w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                     >
-                      🍳 Start Cooking
+                      Start Cooking
                     </Link>
 
                     <button
@@ -172,9 +165,8 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* New Sections for "What We Do", "Why Choose Us", "Benefits" */}
-        {/* These sections also use max-w-4xl to constrain their width, allowing for wider content if needed */}
+        {/* Additional sections for What We Do, Why Choose Us, and Benefits */}
+        
         <section className="relative z-10 max-w-4xl w-full px-4 text-center text-gray-100 space-y-16">
           {/* What We Do */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-xl">
@@ -190,8 +182,8 @@ export default function HomePage() {
             </p>
             <p className="text-lg leading-relaxed mt-4 text-gray-200">
               From quick weeknight dinners to gourmet feasts, we empower you to
-              cook smarter, reduce food waste, and discover new culinary horizons
-              with ease.
+              cook smarter, reduce food waste, and discover new culinary
+              horizons with ease.
             </p>
           </div>
 
@@ -207,8 +199,8 @@ export default function HomePage() {
                   <strong className="text-white">
                     Smart Ingredient Utilization:
                   </strong>{" "}
-                  Never let food go to waste again. Our AI helps you use up every
-                  last ingredient.
+                  Never let food go to waste again. Our AI helps you use up
+                  every last ingredient.
                 </span>
               </li>
               <li className="flex items-start">
@@ -224,17 +216,21 @@ export default function HomePage() {
               <li className="flex items-start">
                 <span className="text-blue-400 mr-3 text-2xl">★</span>
                 <span className="text-gray-200">
-                  <strong className="text-white">Time-Saving Convenience:</strong>{" "}
-                  Get instant recipe suggestions, saving you time on meal planning
-                  and grocery shopping.
+                  <strong className="text-white">
+                    Time-Saving Convenience:
+                  </strong>{" "}
+                  Get instant recipe suggestions, saving you time on meal
+                  planning and grocery shopping.
                 </span>
               </li>
               <li className="flex items-start">
                 <span className="text-pink-400 mr-3 text-2xl">★</span>
                 <span className="text-gray-200">
-                  <strong className="text-white">Personalized Experience:</strong>{" "}
-                  Whether you have dietary restrictions, preferences, or specific
-                  cooking skills, our AI adapts to your needs.
+                  <strong className="text-white">
+                    Personalized Experience:
+                  </strong>{" "}
+                  Whether you have dietary restrictions, preferences, or
+                  specific cooking skills, our AI adapts to your needs.
                 </span>
               </li>
             </ul>
