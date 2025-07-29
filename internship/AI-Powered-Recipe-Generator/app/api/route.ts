@@ -4,7 +4,12 @@ export async function POST(request: NextRequest) {
   try {
     const { prompt } = await request.json();
     
-    const res = await fetch("http://localhost:5678/webhook/generate-recipe", {
+    // Use environment variable instead of hardcoded localhost
+    const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/generate-recipe";
+    
+    console.log("Using n8n webhook URL:", n8nWebhookUrl); // Debug log
+    
+    const res = await fetch(n8nWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),

@@ -356,7 +356,7 @@ export default function RecipeGeneratorPage() {
                   {selectedRecipe ? (
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
                       <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                        🍽️ Saved Recipe
+                        🍽️ {selectedRecipe.recipeName}
                       </h3>
                       <div className="flex space-x-3">
                         <button
@@ -384,7 +384,7 @@ export default function RecipeGeneratorPage() {
                     </div>
                   ) : (
                     <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6">
-                      🍽️ Fresh Recipe
+                      🍽️ Fresh Recipe Generated
                     </h3>
                   )}
 
