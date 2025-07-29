@@ -177,16 +177,29 @@ export async function GET(request: NextRequest) {
 
       console.log(`✅ Found ${rawRecipes.length} recipes for user: ${userEmail}`);
       
-      // Convert to properly typed array and serialize
-      const serializedRecipes = rawRecipes.map((recipe: unknown) => ({
-        _id: recipe._id.toString(),
-        recipeName: recipe.recipeName || 'Untitled Recipe',
-        prompt: recipe.prompt || '',
-        createdAt: recipe.createdAt,
-        source: recipe.source,
-        success: recipe.success || true,
-        userEmail: recipe.userEmail
-      }));
+      // Convert to properly typed array and serialize with proper type casting
+      const serializedRecipes = rawRecipes.map((recipe: unknown) => {
+        // Type guard to ensure we have the expected properties
+        const typedRecipe = recipe as {
+          _id: Types.ObjectId;
+          recipeName?: string;
+          prompt?: string;
+          createdAt?: Date;
+          source?: string;
+          success?: boolean;
+          userEmail?: string;
+        };
+
+        return {
+          _id: typedRecipe._id.toString(),
+          recipeName: typedRecipe.recipeName || 'Untitled Recipe',
+          prompt: typedRecipe.prompt || '',
+          createdAt: typedRecipe.createdAt,
+          source: typedRecipe.source,
+          success: typedRecipe.success || true,
+          userEmail: typedRecipe.userEmail
+        };
+      });
 
       // Log first recipe for debugging using serialized data
       if (serializedRecipes.length > 0) {
