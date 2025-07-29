@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '../../../lib/mongodb';
 import Recipe from '../../../lib/models/Recipe';
+import { Types } from 'mongoose';
+
+// Add interface for lean recipe document
+interface LeanRecipe {
+  _id: Types.ObjectId;
+  recipeName: string;
+  prompt: string;
+  createdAt: Date;
+  source?: string;
+  success: boolean;
+}
 
 // Helper function to extract recipe name from content
 function extractRecipeName(content: string, fallbackPrompt: string): string {
@@ -9,11 +20,8 @@ function extractRecipeName(content: string, fallbackPrompt: string): string {
 
   const patterns = [
     /(?:Recipe(?:\s+for)?:?\s*)([^\n\r]+)/i,
-    
     /^([^\n\r]{10,80})(?:\n|\r|$)/,
-    
     /(?:dish|meal|recipe)\s+(?:is|called|named)\s+([^\n\r.,]{5,50})/i,
-
     /(?:make|prepare|cook)\s+(?:a|an|some)?\s*([^\n\r.,]{5,50})/i
   ];
   
@@ -140,14 +148,14 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .limit(20)
       .select('_id recipeName prompt createdAt source success')
-      .lean();
+      .lean() as LeanRecipe[]; // Fix: Type assertion for lean documents
 
     console.log(`✅ Found ${recipes.length} recipes for user: ${userEmail}`);
     
     // Convert MongoDB ObjectId to string for JSON serialization
     const serializedRecipes = recipes.map(recipe => ({
       ...recipe,
-      _id: recipe._id.toString()
+      _id: recipe._id.toString() // Now TypeScript knows _id is ObjectId
     }));
 
     return NextResponse.json({

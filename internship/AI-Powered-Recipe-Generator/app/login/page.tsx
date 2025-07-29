@@ -65,7 +65,9 @@ export default function LoginPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       setSent(true);
     } catch (error) {
       console.error("Error:", error);
@@ -86,13 +88,6 @@ export default function LoginPage() {
       {/* Sparkles component is fixed over the background */}
       <Sparkles />
 
-      {/* CHANGE 3: Main content wrapper.
-          - Retains min-h-screen and flex centering to keep the login form
-            vertically centered on the screen when content is sparse.
-          - The key is that the *outer* div no longer has overflow-hidden,
-            allowing the browser to scroll the page if content within this
-            wrapper ever exceeds the viewport height.
-      */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
         <div className="bg-white/10 backdrop-blur-xl shadow-2xl rounded-3xl p-8 w-full max-w-md border border-white/20 relative overflow-hidden">
           {/* Glowing border effect */}

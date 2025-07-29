@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '../../../lib/mongodb';
 import Recipe from '../../../lib/models/Recipe';
+import { Types } from 'mongoose'; // Add this import
+
+// Add interface for lean recipe document
+interface LeanRecipe {
+  _id: Types.ObjectId;
+  recipeName: string;
+  prompt: string;
+  createdAt: Date;
+  source?: string;
+  success: boolean;
+  userEmail?: string; // Add this for debugging
+}
 
 export async function GET(request: NextRequest) {
   console.log("🚀 Starting /api/recipes GET request");
@@ -33,7 +45,7 @@ export async function GET(request: NextRequest) {
         success: false,
         recipes: [],
         error: 'Database connection failed',
-        details: dbError.message
+        details: dbError instanceof Error ? dbError.message : 'Unknown error' // Fix: Type check
       }, { status: 500 });
     }
 
@@ -44,15 +56,15 @@ export async function GET(request: NextRequest) {
       const recipes = await Recipe.find({ userEmail })
         .sort({ createdAt: -1 })
         .limit(20)
-        .select('_id recipeName prompt createdAt source success')
-        .lean();
+        .select('_id recipeName prompt createdAt source success userEmail') // Add userEmail for debugging
+        .lean() as LeanRecipe[]; // Fix: Add type assertion
 
       console.log(`✅ Found ${recipes.length} recipes for user: ${userEmail}`);
       
       // Log first recipe for debugging
       if (recipes.length > 0) {
         console.log("📄 Sample recipe:", {
-          id: recipes[0]._id,
+          id: recipes[0]._id.toString(), // Fix: Convert ObjectId to string
           name: recipes[0].recipeName,
           userEmail: recipes[0].userEmail
         });
@@ -61,7 +73,7 @@ export async function GET(request: NextRequest) {
       // Convert MongoDB ObjectId to string for JSON serialization
       const serializedRecipes = recipes.map(recipe => ({
         ...recipe,
-        _id: recipe._id.toString()
+        _id: recipe._id.toString() // Now TypeScript knows _id is ObjectId
       }));
 
       return NextResponse.json({
@@ -76,7 +88,7 @@ export async function GET(request: NextRequest) {
         success: false,
         recipes: [],
         error: 'Failed to query recipes',
-        details: queryError.message
+        details: queryError instanceof Error ? queryError.message : 'Unknown error' // Fix: Type check
       }, { status: 500 });
     }
 
