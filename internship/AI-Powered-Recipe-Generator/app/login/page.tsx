@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { FormEvent } from "react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -54,14 +55,14 @@ export default function LoginPage() {
     );
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`, // Ensure this path is correct for your dashboard
+          emailRedirectTo: `${window.location.origin}/recipes`, // Changed to /recipes since that's your main page
         },
       });
 
@@ -71,8 +72,6 @@ export default function LoginPage() {
       setSent(true);
     } catch (error) {
       console.error("Error:", error);
-      // IMPORTANT: Replaced alert with a more user-friendly message or modal in a real app
-      // For this example, keeping it simple but noting the change
       alert("Error sending magic link. Please try again.");
     } finally {
       setLoading(false);

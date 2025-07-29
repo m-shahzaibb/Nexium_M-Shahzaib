@@ -4,23 +4,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { User } from "@supabase/supabase-js";
 
 export default function HomePage() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUser(data.user);
-      }
+      setUser(data?.user || null);
       setLoading(false);
     };
     getUser();
-  }, [router]); 
-  
+  }, []);
+
   // Sparkle component for animation
   const Sparkles = () => {
     const sparkles = Array.from({ length: 50 }, (_, i) => (
@@ -44,7 +43,6 @@ export default function HomePage() {
     ));
 
     return (
-      // The sparkles layer should always cover the full screen
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {sparkles}
         {Array.from({ length: 30 }, (_, i) => (
@@ -65,7 +63,6 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      // Loading screen maintains min-h-screen to ensure it's always full screen
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <Sparkles />
         <div className="text-center">
@@ -77,22 +74,13 @@ export default function HomePage() {
   }
 
   return (
-    // Outer container: Relative to allow the fixed background and sparkles to overlay.
-    // No min-h-screen here, as content will dictate height, allowing scrolling.
     <div className="relative">
-      {/* Fixed background gradient covering the entire viewport */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 -z-10" />
-
-      {/* Sparkles component is fixed over the background */}
       <Sparkles />
-      {/* Main content container */}
 
       <div className="relative z-10 flex flex-col items-center px-4 py-16 sm:py-24">
-        {/* Hero section with main card */}
-        {/* Added w-full max-w-2xl to this flex container to match the card's width constraint */}
         <div className="flex flex-col items-center justify-center mb-16 w-full max-w-2xl">
           <div className="bg-white/10 backdrop-blur-xl shadow-2xl rounded-3xl px-6 py-10 sm:px-10 sm:py-12 w-full border border-white/20 relative overflow-hidden text-center">
-            {/* Glowing border effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-blue-400/20 rounded-3xl blur-xl"></div>
 
             <div className="relative z-10">
@@ -113,7 +101,7 @@ export default function HomePage() {
                   <p className="text-lg text-gray-200 mb-6">
                     Welcome back,{" "}
                     <span className="font-semibold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                      {user.email}
+                      {user.email || "Chef"}
                     </span>
                     !
                   </p>
@@ -165,7 +153,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-        {/* Additional sections for What We Do, Why Choose Us, and Benefits */}
 
         <section className="relative z-10 max-w-4xl w-full px-4 text-center text-gray-100 space-y-16">
           {/* What We Do */}
@@ -275,7 +262,6 @@ export default function HomePage() {
         </section>
       </div>
 
-      {/* Custom CSS for animations */}
       <style jsx global>{`
         @keyframes fall {
           to {

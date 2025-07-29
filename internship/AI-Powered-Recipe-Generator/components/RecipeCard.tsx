@@ -1,4 +1,3 @@
-ship / AI - Powered - Recipe - Generator / components / RecipeCard.tsx;
 interface RecipeCardProps {
   title: string;
   description: string;

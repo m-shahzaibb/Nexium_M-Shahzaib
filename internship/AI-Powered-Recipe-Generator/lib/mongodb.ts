@@ -7,21 +7,30 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable in .env.local');
 }
 
-// Extend global to include mongoose
+// Define the cache type
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+// Extend global to include mongoose with proper typing
 declare global {
-  var mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
-  };
+  var mongoose: MongooseCache | undefined;
 }
 
-let cached = global.mongoose;
+let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+if (!global.mongoose) {
+  global.mongoose = cached;
 }
 
-async function connectDB() {
+async function connectDB(): Promise<typeof mongoose> {
+  // Type guard to ensure cached is defined
+  if (!cached) {
+    cached = { conn: null, promise: null };
+    global.mongoose = cached;
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -31,9 +40,10 @@ async function connectDB() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    // Fix: Add type assertion since we already validated MONGODB_URI exists above
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts).then((mongooseInstance) => {
       console.log('✅ Connected to MongoDB');
-      return mongoose;
+      return mongooseInstance;
     });
   }
 
