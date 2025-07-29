@@ -34,15 +34,30 @@ export async function GET(
       );
     }
 
+    // Serialize the recipe for JSON response
+    const serializedRecipe = {
+      _id: recipe._id.toString(),
+      recipeName: recipe.recipeName || 'Untitled Recipe',
+      prompt: recipe.prompt || '',
+      recipeContent: recipe.recipeContent || '',
+      createdAt: recipe.createdAt,
+      source: recipe.source,
+      success: recipe.success || true,
+      userEmail: recipe.userEmail
+    };
+
     return NextResponse.json({
       success: true,
-      recipe: recipe
+      recipe: serializedRecipe
     });
 
   } catch (error) {
     console.error("Error fetching recipe:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch recipe' },
+      { 
+        error: 'Failed to fetch recipe',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
@@ -74,16 +89,31 @@ export async function DELETE(
       );
     }
 
+    // Serialize the deleted recipe for JSON response
+    const serializedDeletedRecipe = {
+      _id: deletedRecipe._id.toString(),
+      recipeName: deletedRecipe.recipeName || 'Untitled Recipe',
+      prompt: deletedRecipe.prompt || '',
+      recipeContent: deletedRecipe.recipeContent || '',
+      createdAt: deletedRecipe.createdAt,
+      source: deletedRecipe.source,
+      success: deletedRecipe.success || true,
+      userEmail: deletedRecipe.userEmail
+    };
+
     return NextResponse.json({
       success: true,
       message: 'Recipe deleted successfully',
-      deletedRecipe: deletedRecipe
+      deletedRecipe: serializedDeletedRecipe
     });
 
   } catch (error) {
     console.error("Error deleting recipe:", error);
     return NextResponse.json(
-      { error: 'Failed to delete recipe' },
+      { 
+        error: 'Failed to delete recipe',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

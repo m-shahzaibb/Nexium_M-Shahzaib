@@ -11,6 +11,7 @@ interface LeanRecipe {
   createdAt: Date;
   source?: string;
   success: boolean;
+  userEmail?: string;
 }
 
 // Helper function to extract recipe name from content
@@ -165,25 +166,52 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch user's recipes, sorted by most recent first
-    const recipes = await Recipe.find({ userEmail })
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .select('_id recipeName prompt createdAt source success')
-      .lean() as unknown as LeanRecipe[]; // Fix: Double type assertion
+    try {
+      console.log(`🔎 Searching for recipes with userEmail: "${userEmail}"`);
+      
+      const recipes = await Recipe.find({ userEmail })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .select('_id recipeName prompt createdAt source success userEmail')
+        .lean();
 
-    console.log(`✅ Found ${recipes.length} recipes for user: ${userEmail}`);
-    
-    // Convert MongoDB ObjectId to string for JSON serialization
-    const serializedRecipes = recipes.map(recipe => ({
-      ...recipe,
-      _id: recipe._id.toString() // Now TypeScript knows _id is ObjectId
-    }));
+      console.log(`✅ Found ${recipes.length} recipes for user: ${userEmail}`);
+      
+      // Log first recipe for debugging
+      if (recipes.length > 0) {
+        console.log("📄 Sample recipe:", {
+          id: recipes[0]._id.toString(),
+          name: recipes[0].recipeName,
+          userEmail: recipes[0].userEmail
+        });
+      }
+      
+      // Convert MongoDB ObjectId to string for JSON serialization
+      const serializedRecipes = recipes.map(recipe => ({
+        _id: recipe._id.toString(),
+        recipeName: recipe.recipeName || 'Untitled Recipe',
+        prompt: recipe.prompt || '',
+        createdAt: recipe.createdAt,
+        source: recipe.source,
+        success: recipe.success || true,
+        userEmail: recipe.userEmail
+      }));
 
-    return NextResponse.json({
-      success: true,
-      recipes: serializedRecipes,
-      count: serializedRecipes.length
-    });
+      return NextResponse.json({
+        success: true,
+        recipes: serializedRecipes,
+        count: serializedRecipes.length
+      });
+      
+    } catch (queryError) {
+      console.error('❌ Database query failed:', queryError);
+      return NextResponse.json({
+        success: false,
+        recipes: [],
+        error: 'Failed to query recipes',
+        details: queryError instanceof Error ? queryError.message : 'Unknown error'
+      }, { status: 500 });
+    }
 
   } catch (error) {
     console.error("❌ Error fetching recipes:", error);
