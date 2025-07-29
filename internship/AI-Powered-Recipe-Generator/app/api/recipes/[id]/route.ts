@@ -8,6 +8,18 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+// Define the recipe type for lean queries
+interface LeanRecipeType {
+  _id: mongoose.Types.ObjectId;
+  recipeName?: string;
+  prompt?: string;
+  recipeContent?: string;
+  createdAt?: Date;
+  source?: string;
+  success?: boolean;
+  userEmail?: string;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -25,7 +37,7 @@ export async function GET(
 
     await connectDB();
 
-    const recipe = await Recipe.findById(id).lean();
+    const recipe = await Recipe.findById(id).lean() as LeanRecipeType | null;
 
     if (!recipe) {
       return NextResponse.json(
@@ -80,7 +92,7 @@ export async function DELETE(
 
     await connectDB();
 
-    const deletedRecipe = await Recipe.findByIdAndDelete(id);
+    const deletedRecipe = await Recipe.findByIdAndDelete(id) as LeanRecipeType | null;
 
     if (!deletedRecipe) {
       return NextResponse.json(
