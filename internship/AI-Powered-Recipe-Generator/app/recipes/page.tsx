@@ -6,24 +6,39 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
+// Add proper TypeScript interfaces
+interface Recipe {
+  _id: string;
+  recipeName: string;
+  recipeContent: string;
+  prompt: string;
+  createdAt: string;
+  source?: string;
+}
+
+interface User {
+  email: string;
+  id: string;
+}
+
 export default function RecipeGeneratorPage() {
   const [prompt, setPrompt] = useState("");
   const [recipe, setRecipe] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
-  const [previousRecipes, setPreviousRecipes] = useState([]);
+  const [previousRecipes, setPreviousRecipes] = useState<Recipe[]>([]);
   const [loadingRecipes, setLoadingRecipes] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [showPreviousRecipes, setShowPreviousRecipes] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUser(data.user);
-        fetchPreviousRecipes(data.user.email);
+      if (data?.user?.email) {
+        setUser({ email: data.user.email, id: data.user.id });
+        await fetchPreviousRecipes(data.user.email);
       } else {
         router.push("/login");
       }
@@ -32,7 +47,7 @@ export default function RecipeGeneratorPage() {
     getUser();
   }, [router]);
 
-  const fetchPreviousRecipes = async (userEmail) => {
+  const fetchPreviousRecipes = async (userEmail: string) => {
     if (!userEmail) {
       console.log("❌ No userEmail provided");
       return;
@@ -95,9 +110,9 @@ export default function RecipeGeneratorPage() {
       const data = await res.json();
       setRecipe(data.recipe || JSON.stringify(data));
 
-      if (data.saved) {
-        console.log("✅ Recipe saved to database for user:", user?.email);
-        fetchPreviousRecipes(user?.email);
+      if (data.saved && user?.email) {
+        console.log("✅ Recipe saved to database for user:", user.email);
+        await fetchPreviousRecipes(user.email);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -107,7 +122,7 @@ export default function RecipeGeneratorPage() {
     }
   };
 
-  const handleViewRecipe = async (recipeId) => {
+  const handleViewRecipe = async (recipeId: string) => {
     try {
       const res = await fetch(`/api/recipes/${recipeId}`);
       if (res.ok) {
@@ -121,7 +136,7 @@ export default function RecipeGeneratorPage() {
     }
   };
 
-  const handleDeleteRecipe = async (recipeId, recipeName) => {
+  const handleDeleteRecipe = async (recipeId: string, recipeName: string) => {
     if (!confirm(`Are you sure you want to delete "${recipeName}"?`)) {
       return;
     }
@@ -133,7 +148,9 @@ export default function RecipeGeneratorPage() {
 
       if (res.ok) {
         console.log("✅ Recipe deleted successfully");
-        fetchPreviousRecipes(user?.email);
+        if (user?.email) {
+          await fetchPreviousRecipes(user.email);
+        }
 
         if (selectedRecipe && selectedRecipe._id === recipeId) {
           setSelectedRecipe(null);
@@ -149,7 +166,7 @@ export default function RecipeGeneratorPage() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -171,7 +188,7 @@ export default function RecipeGeneratorPage() {
 
     const sparkles = Array.from({ length: 50 }, (_, i) => (
       <div
-        key={i}
+        key={`sparkle-${i}`}
         className="absolute animate-pulse opacity-70"
         style={{
           left: `${Math.random() * 100}%`,
@@ -241,7 +258,7 @@ export default function RecipeGeneratorPage() {
             <p className="text-center text-gray-200 mb-8 text-lg sm:text-xl">
               Welcome,{" "}
               <span className="font-semibold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                {user?.email}
+                {user?.email || "Guest"}
               </span>
             </p>
 
@@ -313,11 +330,12 @@ export default function RecipeGeneratorPage() {
                               </h4>
                               <p className="text-base text-gray-300 group-hover:text-gray-100 mt-2 font-medium">
                                 {formatDate(recipe.createdAt)}{" "}
-                                {recipe.source !== "n8n-gemini" && (
-                                  <span className="ml-2 px-3 py-1 bg-yellow-500/40 text-yellow-100 rounded-full text-sm border border-yellow-400/60 font-semibold">
-                                    {recipe.source}
-                                  </span>
-                                )}
+                                {recipe.source &&
+                                  recipe.source !== "n8n-gemini" && (
+                                    <span className="ml-2 px-3 py-1 bg-yellow-500/40 text-yellow-100 rounded-full text-sm border border-yellow-400/60 font-semibold">
+                                      {recipe.source}
+                                    </span>
+                                  )}
                               </p>
                             </div>
                             <div className="flex space-x-3">
@@ -356,7 +374,7 @@ export default function RecipeGeneratorPage() {
                   {selectedRecipe ? (
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
                       <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                        🍽️ {selectedRecipe.recipeName}
+                        🍽️ Saved Recipe
                       </h3>
                       <div className="flex space-x-3">
                         <button
@@ -384,7 +402,7 @@ export default function RecipeGeneratorPage() {
                     </div>
                   ) : (
                     <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6">
-                      🍽️ Fresh Recipe Generated
+                      🍽️ Fresh Recipe
                     </h3>
                   )}
 
@@ -510,15 +528,15 @@ export default function RecipeGeneratorPage() {
                 <ul className="text-gray-200 space-y-3 text-left">
                   <li className="flex items-start">
                     <span className="text-emerald-400 mr-3 mt-1">•</span>
-                    "Chickpea and spinach curry with coconut milk"
+                    Chickpea and spinach curry with coconut milk
                   </li>
                   <li className="flex items-start">
                     <span className="text-emerald-400 mr-3 mt-1">•</span>
-                    "Roasted vegetable quinoa bowl with tahini dressing"
+                    Roasted vegetable quinoa bowl with tahini dressing
                   </li>
                   <li className="flex items-start">
                     <span className="text-emerald-400 mr-3 mt-1">•</span>
-                    "Mushroom and lentil shepherd's pie"
+                    Mushroom and lentil shepherd pie
                   </li>
                 </ul>
               </div>
@@ -530,15 +548,15 @@ export default function RecipeGeneratorPage() {
                 <ul className="text-gray-200 space-y-3 text-left">
                   <li className="flex items-start">
                     <span className="text-orange-400 mr-3 mt-1">•</span>
-                    "Honey garlic chicken with roasted sweet potatoes"
+                    Honey garlic chicken with roasted sweet potatoes
                   </li>
                   <li className="flex items-start">
                     <span className="text-orange-400 mr-3 mt-1">•</span>
-                    "Asian-inspired salmon with sesame green beans"
+                    Asian-inspired salmon with sesame green beans
                   </li>
                   <li className="flex items-start">
                     <span className="text-orange-400 mr-3 mt-1">•</span>
-                    "Beef and broccoli stir-fry with jasmine rice"
+                    Beef and broccoli stir-fry with jasmine rice
                   </li>
                 </ul>
               </div>
@@ -550,15 +568,15 @@ export default function RecipeGeneratorPage() {
                 <ul className="text-gray-200 space-y-3 text-left">
                   <li className="flex items-start">
                     <span className="text-teal-400 mr-3 mt-1">•</span>
-                    "15-minute garlic shrimp pasta"
+                    15-minute garlic shrimp pasta
                   </li>
                   <li className="flex items-start">
                     <span className="text-teal-400 mr-3 mt-1">•</span>
-                    "One-pan chicken fajita bowl"
+                    One-pan chicken fajita bowl
                   </li>
                   <li className="flex items-start">
                     <span className="text-teal-400 mr-3 mt-1">•</span>
-                    "Avocado toast with poached eggs and chili flakes"
+                    Avocado toast with poached eggs and chili flakes
                   </li>
                 </ul>
               </div>
@@ -570,15 +588,15 @@ export default function RecipeGeneratorPage() {
                 <ul className="text-gray-200 space-y-3 text-left">
                   <li className="flex items-start">
                     <span className="text-yellow-400 mr-3 mt-1">•</span>
-                    "3-ingredient banana oat cookies"
+                    3-ingredient banana oat cookies
                   </li>
                   <li className="flex items-start">
                     <span className="text-yellow-400 mr-3 mt-1">•</span>
-                    "Microwave chocolate mug cake"
+                    Microwave chocolate mug cake
                   </li>
                   <li className="flex items-start">
                     <span className="text-yellow-400 mr-3 mt-1">•</span>
-                    "Berry yogurt parfait with granola"
+                    Berry yogurt parfait with granola
                   </li>
                 </ul>
               </div>
@@ -588,7 +606,7 @@ export default function RecipeGeneratorPage() {
           {/* Benefits Section */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 sm:p-12 border border-white/20 shadow-xl">
             <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-8">
-              ✨ Why You'll Love Cooking With AI
+              ✨ Why You will Love Cooking With AI
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex items-start space-x-4 text-left">

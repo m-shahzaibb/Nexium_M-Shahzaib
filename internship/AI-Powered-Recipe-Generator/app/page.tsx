@@ -166,7 +166,7 @@ export default function HomePage() {
           </div>
         </div>
         {/* Additional sections for What We Do, Why Choose Us, and Benefits */}
-        
+
         <section className="relative z-10 max-w-4xl w-full px-4 text-center text-gray-100 space-y-16">
           {/* What We Do */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-xl">
@@ -239,7 +239,7 @@ export default function HomePage() {
           {/* Benefits */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-xl">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-400 to-lime-400 bg-clip-text text-transparent mb-4">
-              🎁 Benefits You'll Love
+              🎁 Benefits You will Love
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
               <div className="flex items-center space-x-3">

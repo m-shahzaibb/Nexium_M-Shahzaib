@@ -6,19 +6,14 @@ import Recipe from '../../../lib/models/Recipe';
 function extractRecipeName(content: string, fallbackPrompt: string): string {
   // Clean the content first
   const cleanContent = content.replace(/[#*_`]/g, '').trim();
-  
-  // Try multiple patterns in order of preference
+
   const patterns = [
-    // "Recipe: Name" or "Recipe for Name"
     /(?:Recipe(?:\s+for)?:?\s*)([^\n\r]+)/i,
     
-    // First line if it's short and looks like a title
     /^([^\n\r]{10,80})(?:\n|\r|$)/,
     
-    // Look for dish names in the content
     /(?:dish|meal|recipe)\s+(?:is|called|named)\s+([^\n\r.,]{5,50})/i,
-    
-    // Look for "Make" or "Prepare" followed by dish name
+
     /(?:make|prepare|cook)\s+(?:a|an|some)?\s*([^\n\r.,]{5,50})/i
   ];
   
@@ -31,14 +26,12 @@ function extractRecipeName(content: string, fallbackPrompt: string): string {
       name = name.replace(/[.,!?;:]$/, ''); // Remove trailing punctuation
       name = name.replace(/\s+/g, ' '); // Normalize whitespace
       
-      // Check if it's a reasonable title (not too long, not just numbers)
       if (name.length >= 5 && name.length <= 80 && !/^\d+$/.test(name)) {
         return name;
       }
     }
   }
-  
-  // Fallback: Generate from prompt
+
   const fallbackName = fallbackPrompt.length > 50 ? fallbackPrompt.slice(0, 47) + '...' : fallbackPrompt;
   return `Recipe for ${fallbackName}`;
 }
