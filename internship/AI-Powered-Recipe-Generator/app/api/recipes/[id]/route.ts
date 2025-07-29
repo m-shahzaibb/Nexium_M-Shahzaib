@@ -3,12 +3,18 @@ import connectDB from '../../../../lib/mongodb';
 import Recipe from '../../../../lib/models/Recipe';
 import mongoose from 'mongoose';
 
+// Fix: Define proper interface for params
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const { id } = params;
+    // Fix: Await the params since they're now a Promise
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -44,10 +50,11 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const { id } = params;
+    // Fix: Await the params since they're now a Promise
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(

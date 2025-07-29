@@ -88,7 +88,9 @@ export default function RecipeGeneratorPage() {
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      return;
+    }
     setLoading(true);
     setSelectedRecipe(null);
     try {
