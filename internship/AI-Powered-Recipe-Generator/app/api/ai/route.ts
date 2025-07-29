@@ -169,25 +169,16 @@ export async function GET(request: NextRequest) {
     try {
       console.log(`🔎 Searching for recipes with userEmail: "${userEmail}"`);
       
-      const recipes = await Recipe.find({ userEmail })
+      const rawRecipes = await Recipe.find({ userEmail })
         .sort({ createdAt: -1 })
         .limit(20)
         .select('_id recipeName prompt createdAt source success userEmail')
         .lean();
 
-      console.log(`✅ Found ${recipes.length} recipes for user: ${userEmail}`);
+      console.log(`✅ Found ${rawRecipes.length} recipes for user: ${userEmail}`);
       
-      // Log first recipe for debugging
-      if (recipes.length > 0) {
-        console.log("📄 Sample recipe:", {
-          id: recipes[0]._id.toString(),
-          name: recipes[0].recipeName,
-          userEmail: recipes[0].userEmail
-        });
-      }
-      
-      // Convert MongoDB ObjectId to string for JSON serialization
-      const serializedRecipes = recipes.map(recipe => ({
+      // Convert to properly typed array and serialize
+      const serializedRecipes = rawRecipes.map((recipe: unknown) => ({
         _id: recipe._id.toString(),
         recipeName: recipe.recipeName || 'Untitled Recipe',
         prompt: recipe.prompt || '',
@@ -196,6 +187,15 @@ export async function GET(request: NextRequest) {
         success: recipe.success || true,
         userEmail: recipe.userEmail
       }));
+
+      // Log first recipe for debugging using serialized data
+      if (serializedRecipes.length > 0) {
+        console.log("📄 Sample recipe:", {
+          id: serializedRecipes[0]._id,
+          name: serializedRecipes[0].recipeName,
+          userEmail: serializedRecipes[0].userEmail
+        });
+      }
 
       return NextResponse.json({
         success: true,
